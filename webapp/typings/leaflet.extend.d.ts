@@ -200,4 +200,32 @@ declare namespace L {
     }
 
     export function heatLayer(latlngs: LatLngExpression[], options?: HeatLayerOptions): HeatLayer;
+
+    interface MarkerClusterGroupOptions {
+        maxClusterRadius?: number;
+        spiderfyOnMaxZoom?: boolean;
+        showCoverageOnHover?: boolean;
+        zoomToBoundsOnClick?: boolean;
+        disableClusteringAtZoom?: number;
+        iconCreateFunction?: (cluster: MarkerCluster) => L.DivIcon;
+    }
+
+    interface MarkerCluster extends L.Layer {
+        getAllChildMarkers(): L.Marker[];
+        getChildCount(): number;
+        zoomToBounds(): void;
+        spiderfy(): void;
+    }
+
+    interface MarkerClusterGroup extends L.LayerGroup {
+        addLayer(layer: L.Layer): this;
+        removeLayer(layer: L.Layer): this;
+        clearLayers(): this;
+        refreshClusters(): this;
+        getLayers(): L.Layer[];
+        getChildClusters(): MarkerCluster[];
+        getAllChildMarkers(): L.Marker[];
+    }
+
+    function markerClusterGroup(options?: MarkerClusterGroupOptions): MarkerClusterGroup;
 }

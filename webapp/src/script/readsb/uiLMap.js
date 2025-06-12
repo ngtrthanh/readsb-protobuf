@@ -7,6 +7,28 @@ var READSB;
                 doubleClickZoom: false,
                 worldCopyJump: true,
             }).setView([READSB.AppSettings.CenterLat, READSB.AppSettings.CenterLon], READSB.AppSettings.ZoomLevel);
+
+            // Initialize marker cluster group for aircraft
+            this.AircraftPositions = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                disableClusteringAtZoom: 15, // Disable clustering at high zoom levels
+                iconCreateFunction: function(cluster) {
+                    const markers = cluster.getAllChildMarkers();
+                    const count = markers.length;
+                    let html = '<div class="marker-cluster aircraft-cluster">';
+                    html += '<span>' + count + '</span>';
+                    html += '</div>';
+                    return L.divIcon({
+                        html: html,
+                        className: 'marker-cluster',
+                        iconSize: L.point(40, 40)
+                    });
+                }
+            });
+
             L.control.button({
                 callback: this.OnHideSidebarButtonClick.bind(this),
                 classes: ["leaflet-btn-control", "leaflet-btn-hide-sidepanel"],

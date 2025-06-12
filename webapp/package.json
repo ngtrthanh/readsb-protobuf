@@ -18,7 +18,9 @@
   "devDependencies": {
     "@types/file-saver": "^2.0.1",
     "@types/jquery": "^3.5.3",
-    "@types/node": "^12.12.69"
+    "@types/node": "^12.12.69",
+    "@types/leaflet.markercluster": "^1.5.3",
+    "leaflet.markercluster": "^1.5.3"
   },
   "engines": {
     "node": ">= 13.1.0",

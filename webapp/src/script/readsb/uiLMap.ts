@@ -22,7 +22,7 @@ namespace READSB {
      * Use LMap here because Map is already an existing class in Typescript
      */
     export class LMap {
-        public static AircraftPositions = new L.FeatureGroup();
+        public static AircraftPositions: L.MarkerClusterGroup;
         public static AircraftTraces = new L.FeatureGroup();
         public static Initialized: boolean = false;
 
@@ -32,6 +32,27 @@ namespace READSB {
                 doubleClickZoom: false,
                 worldCopyJump: true,
             }).setView([AppSettings.CenterLat, AppSettings.CenterLon], AppSettings.ZoomLevel);
+
+            // Initialize marker cluster group for aircraft
+            this.AircraftPositions = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                disableClusteringAtZoom: 15, // Disable clustering at high zoom levels
+                iconCreateFunction: (cluster: L.MarkerCluster) => {
+                    const markers = cluster.getAllChildMarkers();
+                    const count = markers.length;
+                    let html = '<div class="marker-cluster aircraft-cluster">';
+                    html += '<span>' + count + '</span>';
+                    html += '</div>';
+                    return L.divIcon({
+                        html: html,
+                        className: 'marker-cluster',
+                        iconSize: L.point(40, 40)
+                    });
+                }
+            });
 
             // Add custom button controls to map.
             L.control.button({
