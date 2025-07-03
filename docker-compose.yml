@@ -1,0 +1,129 @@
+services:
+  readsb:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: readsb-protobuf
+    restart: unless-stopped
+    
+    # Device access for SDR dongles
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    
+    # Privileged mode for USB device access (alternative to devices mapping)
+    # privileged: true
+    
+    ports:
+      # Web interface
+      - "8080:8080"
+      # Raw output
+      - "30002:30002"
+      # Beast output
+      - "30005:30005"
+      # SBS output
+      - "30003:30003"
+      # AVR output
+      - "30001:30001"
+      # Planeplotter output
+      - "30004:30004"
+      # JSON output
+      - "30104:30104"
+    
+    volumes:
+      # Persistent data storage
+      - readsb_data:/var/lib/readsb
+      - readsb_logs:/var/log/readsb
+      # Configuration files (optional override)
+      - ./docker/config:/etc/readsb:ro
+      # Aircraft database (optional)
+      - ./webapp/src/db:/usr/share/readsb/html/db:ro
+    
+    environment:
+      # Basic configuration
+      - READSB_DEVICE_TYPE=rtlsdr
+      - READSB_GAIN=auto
+      - READSB_FREQ=1090000000
+      
+      # Position settings (REQUIRED - set your receiver location)
+      - READSB_LAT=45.0
+      - READSB_LON=9.0
+      
+      # Network settings
+      - READSB_NET_ENABLE=yes
+      - READSB_NET_SBS_PORT=30003
+      - READSB_NET_RAW_PORT=30002
+      - READSB_NET_BEAST_INPUT_PORT=30004
+      - READSB_NET_BEAST_OUTPUT_PORT=30005
+      - READSB_NET_JSON_PORT=30104
+      
+      # Performance settings
+      - READSB_MAX_RANGE=300
+      - READSB_STATS_EVERY=3600
+      - READSB_WRITE_JSON_EVERY=1
+      
+      # Web interface settings
+      - READSB_WEB_PORT=8080
+      
+      # Optional: RTL-SDR settings
+      - READSB_RTL_DEVICE=0
+      - READSB_PPM_ERROR=0
+      
+      # Optional: Bias tee (for RTL-SDR v3)
+      - READSB_BIAS_TEE=no
+      
+      # Optional: Feed to external services
+      # - READSB_NET_CONNECTOR=feed.adsbexchange.com,30005,beast_out
+      
+      # Debug settings
+      - READSB_DEBUG=no
+      - READSB_QUIET=no
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  
+  # Optional: Watchtower for automatic updates
+  watchtower:
+    image: containrrr/watchtower
+    container_name: readsb-watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400  # Check daily
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    profiles:
+      - auto-update
+
+volumes:
+  readsb_data:
+    driver: local
+  readsb_logs:
+    driver: local
+  
+networks:
+  default:
+    name: readsb-network
